@@ -1,0 +1,16 @@
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+tensorflow-gpu
+Keras
+librosa
+audioread
+minisom
+mutagen
+pydub
+requests
+pydot
+tqdm
+python-dotenv

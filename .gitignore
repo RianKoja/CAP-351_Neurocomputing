@@ -1,0 +1,34 @@
+# Files to be ignored by git versioning system.
+
+# Overly large folders and files:
+4 - Recurrent Neural Network/PreProcessedData
+4 - Recurrent Neural Network/ProcessedData
+echonest.csv
+features.csv
+tracks.csv
+Layers_by_complexity.csv 
+
+# Folders used by IDEs:
+.idea
+.vscode
+.vs
+**/venv/*
+# Filetypes that should not be versioned:
+*.aux
+*.bbl
+*.blg
+*.djvu
+*.docx
+*.eps
+*.gz
+*.log
+*.out
+*.pckl
+*.pdf
+*.png
+*.pptx
+*.pyc
+*.zip
+
+# Other temporary/disposable folders:
+__pycache__

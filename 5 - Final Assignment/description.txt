@@ -1,0 +1,10 @@
+Based on the currently proposed task for assignment 4, create further developments for the final project.
+
+Problem:
+Predict changes in stock prices for the near future (initially considering 1 month forward) based on daily prices fluctuations of the specific stock and the daily fluctuations of other assets that indicate market conditions, that is, ETFs that represent the Brazilian iBovespa and iBrX100 indexes, the American S&P500 index (in Brazilian real) and some FIIs (Brazilian real state exchanged trusts)
+
+DataSets:
+Raw data containing 5 years of all stocks traded in the Brazilian stock market (B3) and the aforementioned ETFs and FIIs, the data contains open, close, high, and low daily prices and traded volume. Processed data containing the logarithm of the daily price ratios and the daily ratio between low price 30 days in the future and current highest daily price in time series format.
+
+Techniques employed:
+Different types of recurrent neural networks.
