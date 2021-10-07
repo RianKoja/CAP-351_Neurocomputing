@@ -58,7 +58,7 @@ for index, row in layers_df.iterrows():
     if not (df_scores["Layers"] == layers_str).any():
         layers = tuple(map(int, layers_str[1:-1].split(", ")))
         hidden_layers = layers[1:-1]
-        if 1 in hidden_layers or 2 in hidden_layers or 3 in hidden_layers or 4 in hidden_layers or 5 in hidden_layers or 6 in hidden_layers:
+        if 1 in hidden_layers or 2 in hidden_layers or 3 in hidden_layers or 4 in hidden_layers or 5 in hidden_layers or 6 in hidden_layers or 8 in hidden_layers or 9 in hidden_layers or 10 in hidden_layers:
            continue
         print(f"Working on complexity = {complexity}, layers = {layers} hidden_layers = {hidden_layers}")
 

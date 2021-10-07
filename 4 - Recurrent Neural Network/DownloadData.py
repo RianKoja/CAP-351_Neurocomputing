@@ -24,7 +24,7 @@ if not os.path.exists(preprocessed_data_folder):
 tickers_list = manipulations.get_tickers()
 
 
-# Now for each ticker, download data from yahoo finance: (date fixed to allogit puw reproduction)
+# Now for each ticker, download data from yahoo finance: (date fixed to allow reproduction when cloning repository)
 for ticker in tickers_list:
     try:
         print("Downloading", ticker)
