@@ -8,7 +8,7 @@ Run the script `DownloadData.py` to populate this folder. It creates two .csv fi
 
 # ProcessedData (folder)
 
-After updating the csv files in PreProcessedData, run `ProcessData.py` to process the data. This creates a better data archive, that can be augmented by downloading extra data and processing it. 
+After updating the csv files in PreProcessedData, run `CreateTimeSeries.py` to process the data. This creates a better data archive, that can be augmented by downloading extra data and processing it. 
 
 # models (folder)
 Run `manipulations.py` to create a list of topologies ordered by complexity. Then run `PredictTicker.py`, where mid script a ticker is specified but can be modified, and the script will run the topologies to create the models.

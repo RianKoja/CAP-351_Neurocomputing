@@ -123,6 +123,26 @@ def plot_complexity_correlation(df_scores, col_name):
     ax.set_title("%s vs Complexity\n correlation = %.3f" % (col_name, r_value))
     ax.set_xlabel("Complexity")
     ax.set_ylabel(col_name)
+    plt.grid("minor", "both")
+    plt.legend()
+    plt.tight_layout()
+    plt.draw()
+
+# Creates a scatter plot with the regression between two given columns:
+def plot_correlation(df_scores, col_name_x, col_name_y):
+    # Compute linear regression between 'Complexity' and 'MSE Train':
+    slope, intercept, r_value, p_value, std_err = linregress(df_scores[col_name_x], df_scores[col_name_y])
+
+    # Create a scatter plot of the scores and plot the linear regression:
+    ax = df_scores.plot.scatter(x=col_name_x, y=col_name_y, label="Data")
+    ax.plot(df_scores[col_name_x], intercept + slope * df_scores[col_name_x], "-", color="red", label="Regression Line")
+    # Add labels:
+    ax.set_title(f"{col_name_x} vs {col_name_y}\n correlation = {r_value:.3f}")
+    ax.set_xlabel(col_name_x)
+    ax.set_ylabel(col_name_y)
+    plt.grid("minor", "both")
+    plt.legend()
+    plt.tight_layout()
     plt.draw()
 
 
@@ -159,14 +179,19 @@ def compare_prediction(x, y_pred, dt, doc):
     doc.add_fig()
 
 
-def strategy_gain_plot(x, y_pred, y_real, dt, doc, data_name, threshold_hig=0.05, threshold_med=0.03, threshold_low=0.01):
+def strategy_gain_plot(x, y_pred, y_real, dt, doc, data_name):
     # Assume that each time the forecast is above the closing price by about the threshold value, a purchase of 1
     # monetary unit is made on the asset. Plot the investment made, the current balance and the return.
     fig_profit = plt.figure(figsize=(10, 6))
     fig_roic = plt.figure(figsize=(10, 6))
-    colors = ['b', 'g', 'r']
+    # Threshold list:
+    thresholds = [0.01, 0.03, 0.05, 0.07, 0.09, 0.11]
+    # map thresholds to colors and put them in a list:
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"] 
 
-    for threshold, color in zip([threshold_hig, threshold_med, threshold_low], colors):
+    roic_list = []
+
+    for threshold, color in zip(thresholds, colors):
         daily_investment = []
         daily_predicted_return = []
         daily_real_return = []
@@ -194,6 +219,11 @@ def strategy_gain_plot(x, y_pred, y_real, dt, doc, data_name, threshold_hig=0.05
 
         df['Investment frequency'] = np.cumsum(daily_investment)/np.linspace(1, len(daily_investment), len(daily_investment), dtype=np.float64)
         df['ROIC'] = df["Cumulative Feasible Profit"]/df["Cumulative Investment"]
+        roic_end = df["ROIC"].iloc[-1]
+        delta_dates = pd.to_datetime(dt["Date"].iloc[-1])-pd.to_datetime(dt["Date"].iloc[0])
+        date_diff = delta_dates.days + 30
+        roic_year = (1+roic_end)**(365/date_diff) - 1
+        roic_list.append(roic_year)
 
         plt.figure(fig_profit.number)
         ax = plt.gca()
@@ -207,6 +237,8 @@ def strategy_gain_plot(x, y_pred, y_real, dt, doc, data_name, threshold_hig=0.05
     plt.figure(fig_profit.number)
     plt.title(f"Simulated Strategy performance at different thresholds for {data_name}")
     plt.grid("minor", "both")
+    plt.xlabel("Date")
+    plt.ylabel("Cumulative Profit/Loss")
     plt.legend()
     plt.tight_layout()
     plt.draw()
@@ -215,10 +247,14 @@ def strategy_gain_plot(x, y_pred, y_real, dt, doc, data_name, threshold_hig=0.05
     plt.figure(fig_roic.number)
     plt.title(f"Simulated Strategy ROIC at different thresholds for {data_name}")
     plt.grid("minor", "both")
+    plt.xlabel("Date")
+    plt.ylabel("ROIC")
     plt.legend()
     plt.tight_layout()
     plt.draw()
     doc.add_fig()
+
+    return roic_list
 
 
 if __name__ == "__main__":
