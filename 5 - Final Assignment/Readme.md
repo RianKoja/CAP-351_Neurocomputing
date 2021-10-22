@@ -1,3 +1,6 @@
+## Final Assignment
+This project is an improved version of the 4th assignment developed during the CAP-351 course. Goal is to approach the stock medium term forecasting problem using considerably larger data sets for training and more input features. Model size and topology is mostly limited by available training time and processing capabilities of the development machine (32gb RAM, RTX 2070, i7-9700K).
+
 ## About the Files in this repository and how to update them:
 
 # Repository link:

@@ -1,0 +1,340 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+
+\begin{document}
+
+\title{Application of LSTM Networks on Brazilian Stock Oscillations for Medium-Term Forecast\\
+%{\footnotesize \textsuperscript{*}Note: Sub-titles are not captured in Xplore and should not be used}
+%\thanks{Identify applicable funding agency here. If none, delete this.}
+}
+
+\author{\IEEEauthorblockN{Rian Koja}
+\IEEEauthorblockA{\textit{Applied Computing Division} \\
+\textit{National Institute for Space Research}\\
+São José dos Campos, Brazil \\
+riankoja@gmail.com}
+%\and
+%\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
+%\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+%\textit{name of organization (of Aff.)}\\
+%City, Country \\
+%email address or ORCID}
+}
+
+\maketitle
+
+\begin{abstract}
+Forecasting quotes for exchanged financial assets is a topic of great interest both for academic and industrial researchers. However, some economic principles theoretically prevent the use of such techniques in practice for extended periods or after structural market changes. In this paper, a neural network-based method for forecasting stock prices in Brazil. The method is based on the long short-term memory (LSTM) networks, which is a recurrent neural network (RNN) that is particularly suited for working with time series. The network is trained using a trading data of a few high liquidity stocks appended with data related to some assets which are understood to be market indicators, in this case three Exchange Traded Funds (ETFs) and two Real Estate Trusts (FII in the Portuguese acronym), and the network is used to predict the logarithm of the ratio between last closing price and the minimum trading price 20 trading days in the future, because of this 20 days gaps, this is said to be a medium-term prediction, whereas other works found on the literature often attempt to perform next day predictions on market indexes only. A trading strategy is also proposed to be used to trade these assets, which is based on the neural network predictions and simulated under some realistic operational conditions. Some difficulties when training deep networks are found and presented.
+\end{abstract}
+
+\begin{IEEEkeywords}
+LSTM, Neural Networks, Stock Prices, Brazil, ETFs, Trading Strategy, Trading
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+\subsection{On the Securities Market and its Fundamentals}
+Financial assets, securities or instruments are traded on commercial hours all around the globe on huge currency denominated volumes. According to the dataset employed in this work, the ETF "BOVA11" which attempts to follow the main stock market index ("iBovespa") of the Brazilian stock exchange ("B3") negotiated more than 2.7 billion units during the year of 2020, which corresponds to a financial volume of at least 243 billion reals. If over this period which contains six activation of circuit breakers, an algorithm could perfectly forecast the closing price of each section, then an initial capital could be multiplied by more than 8 times or 900\% without leverage nor short-selling, though not accounting for taxes and operational costs. The highest return reported by a Brazilian investment trust on the same year was 89\%, which should correspond to a return before fees of less than 140\% while using 200\% leverage. This discrepancy shows how it is theoretically possible to earn profits on the market, and how even the best and boldest performers are nowhere close to the performance of a limited, accurate but imaginary future telling device.
+
+The reason for this is partially explained by the efficient market hypothesis which states that at all times, "the price of a security reflects all available information about its fundamental value", meaning that the profit to be earned in any position is based on the current forecasts for that security underlying fundamentals, discounted by a rate composed of both the risk-free rate and the equity risk premium asked by the market for that class of asset. Thus any deviations from this return would arise from the reality not matching the expectations or unforeseen structural changes in the market. This implies that no active manager should be able, in the long term, to outperform the market.
+
+There are managers, however, known for consistently (but not perfectly) outperforming the market, with Warren Buffet being the most prominent example. These performances can be explained partially by negotiating out-of-market securities (i.e. shares in privately held companies), but for managers that operate only in the open market, there is a common belief that market dynamics affect the prices of securities, making them deviate significantly from their intrinsic value, thus creating opportunities for active investors to outperform the market, one prominent defender of this thesis being Aswath Damodaran \cite{damodaran2012investment}. The justification for this asymmetry being the pricing dynamics which comprise the operational reality of security trading, in which a limited volume is traded each day, possibly small compared to the positions held by investors who may have personal reasons for unloading said positions, and also there are high frequency and day traders who may take long or short positions in an assets without any regard to its intrinsic value, but assuming that there are short term tendencies for the price of that security. These players create the effects of mood and momentum which are said to be the dominant drivers of securities prices on the short term, as mostly responsible for their volatility. A value investor believes that at some point the gap between the price and the intrinsic value must close \cite{damodaran2015valuation}. 
+
+\subsection{Quantitative Trading Strategies}
+
+Quantitative trading strategies however, attempt to use numerical market data, and most recently automated sentiment analysis of news flows to feed a diverse range of algorithms often coupled to automated trading terminals. The most prominent example being the company Renaissance Technologies founded by investor and mathematician Jim Simons. Their product "Medallion Fund", whose quotas are currently only held by employees and partners of Renaissance Technologies is known for outperforming even the returns of Warren Buffet's Berkshire Hathaway stock, albeit working with a much smaller net asset value. Their research and methods, however, are kept in secrecy, and little to nothing is publicly known about the technical details of their trading strategies.
+
+One commonly referred strategy for quantitative security trading is the so called "Moving Average Crossover" or "Moving Average Convergence/Divergence" (MACD) \cite{dunis2004applied}, in which the graph of both a short term (e.g. five days) and a medium to long term (e.g. fifty days) moving average of the closing price of the asset are drawn in a graph, and every time these lines intercept each other, a tendency is said to be formed, and the traded can open a long or short position accordingly. While this strategy is not believed to be generally efficient, it is not hard to find specific securities where usage of this method could yield significant profits. This simple algorithm is a prime example of an algorithmic trading strategy for medium and long term investments and illustrates the main components of one such strategy: Entry criterion, exit criterion. Notably, the strategy does not attempt to forecast future prices, but only to identify upwards or downwards short term tendencies.
+
+\subsection{On Neural Networks}
+
+Neural networks provide a method for trying to predict the outputs of functions that are hard to model, based on an abundant amount of input-output pairs \cite{haykin2010neural}. The Multi-Layer Perceptron Network (MLP) being one of the most simple and straightforward examples. Meanwhile, Recurrent Neural Networks (RNN) are used for sequential data, since they use previous outputs as part of their input. A long enough recurrent neural network is thus capable of learning to compute the Moving Average Crossover and provide a signal indicating buy, hold or sell. There are more advances methods for trading, and possibly a deep learning approach could devise a model that implements a more robust strategy.
+
+\subsection{On Predicting the Markets with neural Networks}
+
+Works such as those cited in \cite{dunis2004applied} discuss the usage of Recurrent Neural Networks as regression analysis for currency trading, along with Auto-Regressive Moving Average (ARMA) models and other benchmark models, with different results regarding the relative performances. There are claims that some of these works suffer from inadequate documentation regarding methodology. In a more recent example, \cite{ZHANG2020113609} proposes the usage of a method for decomposing six market indexes into a set of component functions, thus denoising it, and then using a neural network to predict the future values of those factors, using up to 200 LSTM layers, though with diminishing returns after 40 layers, each with . The authors claim an astoundingly good performance, but it is unclear on their paper how the simulated strategy would be actually implemented, since the only feature predicted are the closing price on the next trading day. Another similar publication is \cite{roondiwala2017predicting}, which proposes the usage of a neural network to predict the next day value of the Indian stock market index. The authors use a simple regression model with two LSTM layers or 128 and 64 neurons respectively and two dense layers of 16 and 1 neurons respectively, but present no simulated strategy.
+
+\subsection{On the Mechanics of the Stock Market}
+
+A few details that should be known about operating on the stock market are listed in this section.
+
+First, during the opening of the market negotiations, the trading operates in auction mode, in which for a few minutes orders of buy and sell are taken but not executed. Before regular trading commences, orders placed are executed at a same price, the so called "opening price", for all orders that can be satisfied by this price, that is, any buy order at a higher than the open price should be satisfied as well as any sell order at a lower than the open price.
+
+Before the market is closed, the market enters auction mode for a few minutes again, and then the execution price at which these orders are executed is the "closing price".
+
+During normal negotiations throughout the day, orders are enqueued in a first arrived first served basis, and are executed as soon as there is a zero or negative gap between the prices demanded in the buy and sell orders. For as long as these gap is positive, it is called the bid-ask spread. When a negative gap occurs, the orders are executed at the price specified by which order was submitted first, executing at a more favorable price to the last placed order. The "low" and "high" prices correspond to the minimum and maximum prices that closed deals on that given day, and often there is a very small volume traded at those prices, with the highest volume normally being traded during the closing auction. 
+
+It is possible to submit "open" orders, which are executed at whatever price is possible based on the counterpart available orders and normally are executed instantly if not during auction mode.
+
+If at any moment during the day, an asset presents a price fluctuation above a meaningful threshold value, it is put into auction mode for a few minutes. If the main market index fluctuates above some threshold, all negotiations are put into auction mode for an extended period of time, a situation called "circuit-breaker". The specific threshold and timing values are defined differently for each stock exchange, and not relevant for the current work.
+
+During non-work hours, the market is closed, all trading is halted and no orders can be placed. Relevant facts and financial reports should only be disclosed by companies when the market is closed, in order to allow proper time for the agents of the market to make their decisions.
+
+When dividends are assigned to stock holders, the stock has one last day in which it can be purchased along with the right to receive said dividends followed by a first day in which it is negotiated without rights to earning that dividend (being call the first day "ex-dividend"). The price closing on the prior day is adjusted such that if the stock opens at the price it previously closed minus the value of the dividend to be earned, then it is not considered to be falling in price. For this, a theoretical closing price called the Adjusted closing price is computed. When adjusted prices are computed for prices in a distant price for stocks that regularly distribute dividends, then closing prices might be seen to be below the 100 cents value (which, for longer periods is commonly not allowed), but actually the stock may not have traded on those prices, that is just an adjusted value such that the return on investment on that stock accounting for reinvested dividends on the same stock can be computed by the ratio of the current trading price to the adjusted closing price of a past date. Adjusted prices also take into account that stocks are sometimes grouped or split, a measure used to keep prices in the range between 5 and 100 reals, which is believed to improve liquidity of the stock while also preventing the "penny stock" condition which exacerbates volatility.
+
+Notably, it is not possible to reliably execute an order on the opening or closing of the market at a specified price, it is only possible to place an order at a desired price and hope that it will be executed at either that price or better. 
+
+And finally, market indexes are composed by theoretical portfolios composed of securities selected quantitatively based on liquidity, market cap and a few other requirements, rebalanced periodically, usually on a quarterly basis. Most of them assume dividends yielded by a security are reinvested on ideal fractions of that security.
+
+\section{Proposed Methodology}
+
+The approach proposed in this work differs from other methods found in the currently researched literature since the application of Neural Networks is employed to predict not the next day closing price of an index or currency exchange rate, but rather the minimum trading value (with some modifications) 20 trading days in advance for an individual stock. This provides a great advantage in terms of the real-world feasibility of executing the operations recommended by a strategy based on the performed prediction. The filtering of noise, should it be necessary, is then a task relegated to the neural network itself, not for the pre-treatment of data. 
+
+While one does not expect one such model to predict extreme events such as the tragedies of Brumadinho and Mariana, both of which significantly and abruptly affected the price of the mining company "Vale" and could hardly have been foreseen or accounted for by market agents, the model should learn how a stock should be expected to behave after one such event. However, crisis such as the meltdown due to the COVID-19 pandemic could have been predicted, since for a while the risk of this disease actually spreading out of China and was monitored by market agents.
+
+A recurrent neural network model, should in theory be able to identify overall tendencies and their reversals in the price of an asset, thus being able to identify entry and exit points for investing in an asset that should surpass a benchmark strategy.
+
+
+
+\subsection{Acquisition and Processing of Data}
+
+A script was used to download trading data from Yahoo Finance, based on a list of tickers obtained from "Fundamentus.com.br", at this step, for each ticker that may be a stock, real estate trust or an ETF, the individual datasets have the following features:
+\begin{description}
+    \item[Date] $\,\,\,\,\,\,\,\,$ The date of the trading day.
+    \item[Open] $\,\,\,\,\,\,\,\,$ The opening price of the trading day.
+    \item[High] $\,\,\,\,\,\,\,\,$ The highest price of the trading day.
+    \item[Low] $\,\,\,\,\,\,\,\,$ The lowest price of the trading day.
+    \item[Close] $\,\,\,\,\,\,\,\,$ The closing price of the trading day.
+    \item[Volume] $\,\,\,\,\,\,\,\,$ The volume traded during the trading day.
+    \item[Adj Close] $\,\,\,\,\,\,\,\,$ The adjusted closing price of the trading day.     
+\end{description}
+
+To produce treated datasets, the following steps were performed:
+
+\begin{itemize}
+    \item A new column called "Goal" is created, and corresponds to the "Low" column shifted down by 20 trading days, as it represents the value to be predicted.
+    \item The Volume is multiplied by the sum on "Open" and "Close" prices for the same day, and multiplied by $5\times 10^{-11}$, which both converts the volume in amount of tickers traded to the financial volume traded, as this is believed to be a better representative of the occurrence of events and the nature of the trading dynamics, and normalized the obtained number such that it is never much higher than 1 through the dataset.
+    \item The columns "Open", "High", "Low", "Close" and "Adj Close" are divided by the closing price of the previous day, and the natural logarithm of the obtained values is taken. This is done to correct for the exponential nature of investment returns (which are often referenced to composite interest returns), and to remove the effects of some stocks preferring higher or lower nominal values, which have little relationship with the fundamentals of a given company.
+\end{itemize}
+
+Due to this treatment steps, the dataset will not be normalized in any way, which is meant to keep analysis valid and facilitate using the trained model on stocks which were not used for training. Once these steps are performed, the results are saved in csv files for each ticker on a dedicated folder.
+
+Before actually feeding the data to the model, some other steps are taken:
+
+\begin{itemize}
+    \item The datasets for tickers "BOVA11", "BRAX11", "IVVB11", "KNCR11" and "KNRI11" are loaded and their "Goal" columns are ditched. These are called "reference tickers".
+    \item A final dataset is built by merging these datasets with the dataset of the ticker to be analyzed such that "Dates" coincide.
+    \item Rows with empty entries are removed (tickers have histories with different lengths).
+    \item The "Date" column is ditched.
+\end{itemize}
+
+The target tickers used in this work are: "BBAS3", "EMBR3", "MGLU3", "ENGI4", "ELET6", "ITUB3", "CIEL3", "JBSS3", "UGPA3", "GGBR4", "VALE3", "SBSP3", "PSSA3", "ABEV3", "USIM5", "LREN3", "RENT3", "CCRO3", "AMER3", "WEGE3", "BRKM5", "MRFG3", "CSAN3", "BRFS3", "CVCB3", "RADL3", "TOTS3", "CYRE3", "ALPA4", "BBSE3", "VIVT3" and "SANB11". All of which represent high liquidity assets, and represent shares of large companies operating in different segments of the economy. 
+
+As for the reference tickers their characteristics are noted below.
+
+\begin{itemize}
+    \item[	BOVA11] Is an ETF that tracks the iBovespa index, which is the most popular and commonly referred index for the Brazilian market.
+    \item[	BRAX11] Is an ETF that represents and Brasil-100 index, which is composed of the 100 most liquid and capitalized companies in the Brazilian stock exchange, and was created as an alterative to the iBovespa, which in the past considered only the liquidity of the stocks, not the total capitalization, which put a meaningful weight on speculative companies.
+    \item[	IVVB11] Is an ETF that replicates the Standard \& Poor's 500 index, which is composed by the 500 most liquid and capitalized companies that are profitable in the American stock exchange. It does not hedge against the currency exchange, thus it is meant to indicate both the mood of the overall world markets and of the effect of the currency exchange rate.
+    \item[	KNCR11] Is a low-risk Real Estate Trust that invests only on fixed-income securities baked by real-estate assets. It is meant to represent expectations regarding this market, and the risk-free interest rate in Brazil.
+    \item[	KNRI11] Is a logistics and commercial office Real Estate Trust which has been for long the most liquid and capitalized FII in the Brazilian stock exchange. It is meant to represent expectations regarding this market, and the long term interest rate and inflation in Brazil.    
+\end{itemize}
+
+
+
+\subsection{Defining Topologies and Training Models}
+For each target ticker, the first 15\% timesteps are separated for as test data. The last 15\% are used for validation and the rest is used for training, as sketched in Fig. \ref{fig:split}. In order to create batches of data, time series were split into chunks of length 252, which is roughly the number of trading days in a calendar year. Due to this, some training data is discarded, and particularly at the end of the data separated for training the performance obtained might be incompatible with the rest of the data due to this reason.
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/split.png}}
+    \caption{Schematic of the splitting of data for each target ticker.}
+    \label{fig:split}
+\end{figure}
+
+Several topologies were proposed, and training failed for models that were too large. Fig. \ref{fig:3x20_topology} shows the simplest topology tested. All topologies have an Input Layer with 36 neurons, as this is the number of features in the datasets, and a Dense layer at the last position, as the variable to be predicted is a single scalar value. The topology may be denoted as "(36, 7x40, 1)", which implies it has 7 LSTM layers with 40 neurons each, the widths and amount of LSTM layers having been varied.
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/36,3x20,1.png}}
+    \caption{(36, 20, 20, 20, 1) Topology Representation.}
+    \label{fig:3x20_topology}
+\end{figure}
+
+Over the attempts to approach the problem, both Adam and SGD optimizers were tested with different learning rates. No notable difference between the optimizers were found, though the curves of training may vary significantly with respect to learning rate. The loss function selected was always the means squared error. The maximum number of epochs used was 20 thousand, but a callback function was added to stop the training if the loss metric did not improve for 500 epochs.
+
+\subsection{Investment Strategy}
+Let $D0$ represent the current trading day, $D1$ the next trading day, and $D20$ the twentieth trading day after. What the models were trained to predict was:
+
+\begin{equation}
+    y(D0) = \ln \left( \frac{\text{Low}(D20)}{\text{Close}(D0)} \right)
+\end{equation}
+
+Thus:
+\begin{equation}
+    \text{Low}(D20) = \exp{y(D0)} \times \text{Close}(D0)
+\end{equation}
+
+So the output of the model can be used to predict a future price in that is believed by the model to take place 20 trading days in the future. Assume a minimum expected return $r_{\text{min}}$ is required to to accept the risk involved. As the expected return can be taken to be the ratio between the last known price which is the closing price of the current day (although one cannot trade at the closing price) and the predicted price, the expected return is:
+
+\begin{equation}
+    r = \frac{\text{Low}(D20)}{\text{Close}(D0)}-1
+\end{equation}
+
+Thus the required expected return relates to the output of the model by:
+\begin{equation}
+    y(D0) = \ln \left(r+1\right)
+\end{equation}
+
+Since the natural logarithm function is strictly increasing, then if $r\geq r_{\text{min}}$ then:
+\begin{equation}
+    y(D0) = \ln {\left(r+1\right)} \geq \ln \left( r_{\text{min}+1} \right) = \alpha
+\end{equation}
+
+Where $\$alpha$ is computed based on $r_{\text{min}}$ and corresponds to a threshold that can be compared directly with the output of the model, to indicate if the model is predicting a future price that entails an expected return above the requirement.
+
+Then, the investment strategy consists of: After the closing auction of the trading day, run the model with the latest data. If for a given ticker, the output of the model is above the threshold $\alpha$, then one unit of monetary value (which represents a normalized amount that should ideally be small compared to the liquidity of the asset but much larger than the unit ticker price) is invested in the security. Which is assumed to happen on $D1$ at the highest price of that day. On $D20$, the security is sold at the lowest price on the day, In practice, one could sell at the market opening or closing, but assuming that the trading happens at the highest value for purchase and lowest value for sale adds some safety margin to the analysis.
+
+Effectively the simulated return on the investment is:
+\begin{equation}
+    r_{\text{sim}} = \frac{\text{Low}(D20)}{\text{High}(D1)}
+\end{equation}
+
+While the model predicted return, accounting for the execution of the purchase at lowest price on $D20$ is:
+\begin{equation}\label{eq:pred_return}
+    r_{\text{mdl}} = \exp{y(D0)} \times \frac{\text{Close}(D0)}{\text{High}(D1)}
+\end{equation}
+
+The yearly (or year over year - yoy) Return on investment could be retrieved from the return rate obtained over a period by using equation  \ref{eq:roic_year_comp} below. This conversion assumes compounding of returns, which goes against the principles of the strategy, that prescribes investing a constant amount each time the conditions are satisfied, no more no less. Thus, the conversion actually used is the one presented on Equation \ref{eq:roic_year}.
+
+\begin{equation}\label{eq:roic_year_comp}
+\text{ROIC}_{\text{yoy}}^{(\text{compound})} = \left( 1+ \text{ROIC}_{\text{period}} \right)^{\frac{365}{\text{days in period}}} - 1
+\end{equation}
+
+\begin{equation}\label{eq:roic_year}
+	\text{ROIC}_{\text{yoy}} = \text{ROIC}_{\text{period}} \times {\frac{365}{\text{days in period}}}
+\end{equation}
+
+\subsection{Implementation}
+
+The code implemented for this work is available on \cite{KOJAGITHUBCAP375}, it is developed on Python 3.9.5 with used packages and their versions listed on a requirements text file. The machine used had 32Gb of RAM, an RTX-2070 GPU with CuDA and an i7-9700K processor, the operational system was Windows 10.
+
+\section{Results}
+
+In this section, the results obtained from the methodology explained in previous sections is presented.
+
+\subsection{Training Results}
+
+While training models with Keras, the loss function is computed both for the training and the validation data. As seen in Fig. \ref{fig:3x20_training}, the loss function for the validation data evolves erratically while the loss for the training data oscillates with a decreasing trend. This shows that the model is not being able to generalize its results beyond the training data. As the training loss is still relatively large at 0.0095, this seems not to be a consequence of overfitting.
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/Loss_during_training_for_topology_(36__3x20_1).png}}
+    \caption{(36, 20, 20, 20, 1) Topology Training.}
+    \label{fig:3x20_training}
+\end{figure}
+
+For very large models, due to reasons that could not be extensively investigated, the training basically fails, and even for training data there seems to be no learning performed by the training routine. This is believed to be a problem either related to the representation of the data or the amount of data used for training in comparison to the size of the model. Adding more target tickers would be a possibility, but without limiting batches per epoch, the GPU memory did not allow adding more tickers, and allowing different batches naively caused weird jumps on the loss curve for simpler models, without actually solving the problem for larger models. One example of a failed training is shown in Fig. \ref{fig:56x400_training}. When showing predictions, it is straightforward to see that a model failed training. One possible explanation is that the gradients computed for each sample in the dataset are either to small or have directions that are distributed randomly, thus the computed change in parameters is close to the machine precision of the parameters used for initialization.
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/Loss_during_training_for_topology_(36__56x400_1).png}}
+    \caption{(36, 56x400, 1) Topology Training.}
+    \label{fig:56x400_training}
+\end{figure}
+
+\subsection{Prediction Results}
+
+The graphs shown below allow roughly visualizing the results obtained by predicting the goal variable against its true value for each target ticker. These graphs make possible drawing some qualitative analyses. An example of good performance is shown in Fig. \ref{fig:good_prediction}. In this graph, especially in the 2016 to half year into 2019, predictions track reasonably well the true values, and notably the green lines represent data used for training. As can be seen in other graphs as well, the true values have higher than usual volatility after the last quarter of 2019 and before 2016, which partially explains the difficulty for the models to generalize from the training data. 
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/Predictions_vs_reference_for_topology_(36__8x600_1)_and_ticker_MRFG3.eps}}
+    \caption{Prediction versus Target values for topology (36, 8x600, 1) and ticker "MRFG3".}
+    \label{fig:good_prediction}
+\end{figure}
+
+An example of a poor performance is shown in Fig. \ref{fig:bad_prediction}. In this graph, the predictions are not very accurate, and the true predictions are much more volatile than the true values, especially on the test and validation sets. This is partially due to the small model used, which has difficulties even to learn the training data.
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/Predictions_vs_reference_for_topology_(36__3x20_1)_and_ticker_CYRE3.eps}}
+    \caption{Prediction versus Target values for topology (36, 3x20, 1) and ticker "CYRE3".}
+    \label{fig:bad_prediction}
+\end{figure}
+
+An example of a failed prediction is shown in Fig. \ref{fig:failed_prediction}. In this graph, the predictions always close to zero, which shows that the parameters hardly evolved over the training epochs.
+
+\begin{figure}[htbp]
+    \centerline{\includegraphics[width=0.7\columnwidth]{figs/Predictions_vs_reference_for_topology_(36__28x400_1)_and_ticker_VIVT3.eps}}
+    \caption{Prediction versus Target values for topology (36, 28x400, 1) and ticker "VIVT3". This model failed training.}
+    \label{fig:failed_prediction}
+\end{figure}
+
+\section{Strategy Simulation Results}
+
+A few examples of returns obtained with te proposed strategy and models are given in this section for specific tickers, then, the average return on investment on an annualized basis is given, to assess how well could this strategy perform for the trained tickers. Later, a table with the average returns is provided for a few models.
+
+To present what is expected from a good or a bad strategy, first one should notice that the strategy has its gains limited by the gains of the stock that the models is tracking.  However, the losses are ideally limited to zero, that is, if the model could perform perfect predictions, following the proposed strategy would never yield losses, even if it would not allow any profit. Fig. \ref{fig:strategy_good} shows an example of the strategy (and model) performing well, in this case there are plenty of investment opportunities, the dashed curve shows the predicted returns as defined in Eq. \ref{eq:pred_return}. The continuous line shows the actual returns that would be obtained by the model, they are usually below the dashed curves of the same color. Each color stands for a different required expected return $r_{\text{min}}$ (or threshold value). Because both model and stock are performing well, lower thresholds yield higher profits.
+
+\begin{figure}[htbp]
+	\centerline{\includegraphics[width=0.7\columnwidth]{figs/Simulated_Strategy_performance_at_different_thresholds_for_Past_(Test)_Data_and_topology_(36__3x20_1)_and_ticker_LREN3.eps}}
+	\caption{Strategy return for topology (36, 3x20, 1) and ticker "LREN3".}
+	\label{fig:strategy_good}
+\end{figure}
+
+Fig. \ref{fig:strategy_bad} shows a situation in which both model and stock perform poorly, in this case the returns are always negative, and higher thresholds yield smaller losses.
+
+\begin{figure}[htbp]
+	\centerline{\includegraphics[width=0.7\columnwidth]{figs/Simulated_Strategy_performance_at_different_thresholds_for_Past_(Test)_Data_and_topology_(36__8x600_1)_and_ticker_USIM5.eps}}
+	\caption{Strategy return for topology (36, 8x600, 1) and ticker "USIM5".}
+	\label{fig:strategy_bad}
+\end{figure}
+
+A more typical result is show in Fig. \ref{fig:strategy_okay}, where lower thresholds yield higher losses as they make the strategy more conservative, while higher thresholds reduce losses or even yield profits as they make the strategy more conservative, but the highest threshold is not the most profitable, that is, the optimal threshold should balance risk and expected return.
+
+\begin{figure}[htbp]
+	\centerline{\includegraphics[width=0.7\columnwidth]{figs/Simulated_Strategy_performance_at_different_thresholds_for_Past_(Test)_Data_and_topology_(36__8x600_1)_and_ticker_VALE3.eps}}
+	\caption{Strategy return for topology (36, 8x600, 1) and ticker "VALE3".}
+	\label{fig:strategy_okay}
+\end{figure}
+
+Fig. \ref{fig:roic_okay} shows one example for the curve of Return on Investment for the strategy at different required predicted returns. The curves are somewhat similar but notably the high threshold ones have more flat segments, in which the expected return requirement was not met. These curves show an accumulated return on investment that do not take into account the amount of time required to deliver that return. Hence, Eq. \ref{eq:roic_year} is applied on the final values in each graph to 
+
+\begin{figure}[htbp]
+	\centerline{\includegraphics[width=0.7\columnwidth]{figs/Simulated_Strategy_ROIC_at_different_thresholds_for_Past_(Test)_Data_and_topology_(36__8x600_1)_and_ticker_RADL3.eps}}
+	\caption{Return on Investment for topology (36, 8x600, 1) and ticker "RADL3".}
+	\label{fig:roic_okay}
+\end{figure}
+
+
+\begin{figure}[htbp]
+	\centerline{\includegraphics[width=0.7\columnwidth]{figs/Simulated_Strategy_ROIC_at_different_thresholds_for_Past_(Test)_Data_and_topology_(36__8x600_1)_and_ticker_ALPA4.eps}}
+	\caption{Return on Investment for topology (36, 8x600, 1) and ticker "ALPA4".}
+	\label{fig:roic_bad}
+\end{figure}
+
+For comparison, it is possible to visualize that the strategy would be effective if predictions were accurate by plotting the returns the model would obtain on the training data, as shown in Fig. \ref{fig:roic_fake}.
+
+\begin{figure}[htbp]
+	\centerline{\includegraphics[width=0.7\columnwidth]{figs/Simulated_Strategy_ROIC_at_different_thresholds_for_Training_Data_with_topology_(36__8x600_1)_and_ticker_USIM5.eps}}
+	\caption{Return on Investment for topology (36, 8x600, 1) and ticker "USIM5".}
+	\label{fig:roic_fake}
+\end{figure}
+
+A more consolidated form of verifying the simulated returns is by listing the annualized return on investments as computed with Eq. \ref{eq:roic_year} for each ticker in a table, then, at the end, adding the average of the returns per ticker for each threshold proposed. On Table I this is done for the test data, while on Table II this is done for training data. Notably, one commonly used value for equity risk premium is 5\%, and the average returns obtained on training data for a relatively large model still fell short of this acceptability criterion. As a test then, this means that the strategy couples with the models currently tested is not efficient and does not offer a good return for the risk undertaken.
+
+\input{funcs/makereturnsini.tex}
+\makereturnsini
+\input{funcs/makereturnstrn.tex}
+\makereturnstrn
+
+
+\section{Conclusion}
+Several neural networks were trained, validated and tested on the selected and pre-treated financial data. There were issues related to the limitation of the machine used for training and the handling of relatively large amounts of data. Their performance for the task of predicting medium-term oscillations in Brazilian stocks was measured both as a mean square error loss and as a return on investment for a strategy based on the outputs of the trained models. The results were shown in tables and graphs. Unfortunately, yet as expected the results might even track well the training data, but not the validation or the test data. The resulting strategy did not yield on average a positive return on investment, let alone a return above the applicable risk-free rate added to an appropriate equity risk premium. The reasons to expect one strategy such as this to under-perform are outlined in the introduction section, and both the nature of the stock market and the limitations of recurrent neural networks play a role in this ineffectiveness. 
+
+\section*{Acknowledgment}
+
+R. K. would like to thank prof. Marcos Quiles, for ministering the Neurocomputing class, thus providing the context in which this work was developed.
+
+\bibliographystyle{IEEEtran}
+\bibliography{bibliography}
+
+\vspace{12pt}
+\color{red}
+
+\end{document}

@@ -3,6 +3,8 @@
 # Overly large folders and files:
 4 - Recurrent Neural Network/PreProcessedData
 4 - Recurrent Neural Network/ProcessedData
+5 - Final Assignment/PreProcessedData
+5 - Final Assignment/ProcessedData
 echonest.csv
 features.csv
 tracks.csv
@@ -21,6 +23,7 @@ Layers_by_complexity.csv
 *.docx
 *.eps
 *.gz
+*.hdf5
 *.log
 *.out
 *.pckl

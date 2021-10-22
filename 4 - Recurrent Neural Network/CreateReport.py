@@ -29,7 +29,7 @@ data_folder = os.path.join(os.path.dirname(__file__), "ProcessedData")
 doc = createdocument.ReportDocument(title="Recurrent Neural Network Exercise", user_name="Rian Koja")
 
 doc.add_heading("Abstract", level=1)
-doc.add_paragraph("This report presents the results of an exercise on Recurrent Neural Networks, were models of minimal size are employed on a stock forecasting problem. An introduction to this problem is given, along with some practical considerations. The dataset is defined and its preparation is explained. Several small topologies are tested, and the results are presented both in an aggregate sense and in detail for sample models. An investment strategy based on these predictions is simulated, which presents low to negative returns. Final notes are given in the conclusion.")
+doc.add_paragraph("This report presents the results of an exercise on Recurrent Neural Networks, where models of minimal size are employed on a stock forecasting problem. An introduction to this problem is given, along with some practical considerations. The dataset is defined and its preparation is explained. Several small topologies are tested, and the results are presented both in an aggregate sense and in detail for sample models. An investment strategy based on these predictions is simulated, which presents low to negative returns. Final notes are given in the conclusion.")
 
 doc.add_heading("Introduction", level=1)
 doc.add_paragraph(
